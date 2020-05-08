@@ -8,7 +8,7 @@ import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
 import com.ecarx.cloud.elasticsearch.index.indexer.selector.IndexerSelector;
 import com.ecarx.cloud.task.IndexTask;
 import com.ecarx.cloud.enumeration.IndexEventEnum;
-import com.ecarx.cloud.instance.music.common.AnalysisField;
+import com.ecarx.cloud.enumeration.AnalysisFieldEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.elasticsearch.client.transport.TransportClient;
@@ -30,7 +30,7 @@ public class KafkaRecordParser {
         }
         CacheEntity cacheEntity = new CacheEntity();
         String business = messageEntity.getSchemaName() +"."+ messageEntity.getTableName();
-        cacheEntity.setCp(business);
+        cacheEntity.setKind(AnalysisFieldEnum.getKind(business));
         cacheEntity.setTasks(new ArrayList<>());
         cacheEntity.setWords(new ArrayList<>());
 
@@ -43,8 +43,8 @@ public class KafkaRecordParser {
         String word = null;
         if(eventType.equals(IndexEventEnum.ADD.getValue()) ){
             JSONObject newRow = messageEntity.getNewRow();
-            if(newRow.containsKey(AnalysisField.ANALYSIS_FIELD.get(business)) || eventType.equals(IndexEventEnum.UPDATE.getValue())){
-               word = newRow.getString(AnalysisField.ANALYSIS_FIELD.get(business));
+            if(newRow.containsKey(AnalysisFieldEnum.getField(business)) || eventType.equals(IndexEventEnum.UPDATE.getValue())){
+               word = newRow.getString(AnalysisFieldEnum.getField(business));
             }
         }
         if(StringUtils.isNotBlank(word)){
@@ -53,39 +53,25 @@ public class KafkaRecordParser {
         return cacheEntity;
     }
 
-    public static void merge(List<CacheEntity> cacheEntityList, Map<String, Set<String>> wordsToUpdate, Set<String> lexicalItems, List<IndexTask> indexTasks){
+    public static void merge(List<CacheEntity> cacheEntityList, Map<Integer, Set<String>> wordsToUpdate, Set<String> lexicalItems, List<IndexTask> indexTasks){
 
         for(CacheEntity cacheEntity : cacheEntityList){
-            String cp = cacheEntity.getCp();
+            Integer kind = cacheEntity.getKind();
             List<String> words = cacheEntity.getWords();
             indexTasks.addAll(cacheEntity.getTasks());
-            if(wordsToUpdate.containsKey(cp)){
-                wordsToUpdate.get(cp).addAll(words);
+            if(wordsToUpdate.containsKey(kind)){
+                wordsToUpdate.get(kind).addAll(words);
             }else{
                 Set<String> cpWords = new HashSet<>();
                 cpWords.addAll(words);
-                wordsToUpdate.put(cp, cpWords);
+                wordsToUpdate.put(kind, cpWords);
             }
         }
 
-        for(Map.Entry<String, Set<String>> entry : wordsToUpdate.entrySet()){
+        for(Map.Entry<Integer, Set<String>> entry : wordsToUpdate.entrySet()){
             List<String> tmp = new ArrayList<>(entry.getValue());
             lexicalItems.add(tmp.get(0));
             tmp = null;
         }
-    }
-
-    public static void main(String[] args) {
-        Set<String> set = new HashSet<>();
-        set.add("dddd");
-
-        List<String> tmp = new ArrayList<>(set);
-
-        Set<String> t = new HashSet<>();
-        t.add(tmp.get(0));
-        tmp = null;
-        System.out.println(set);
-        System.out.println(tmp);
-        System.out.println(t);
     }
 }

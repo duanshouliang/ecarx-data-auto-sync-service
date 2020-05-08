@@ -1,12 +1,13 @@
 package com.ecarx.cloud.dict;
 
-import com.ecarx.cloud.Util.LanguageUtil;
+import com.ecarx.cloud.util.LanguageUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -66,13 +67,43 @@ public class Dictionary {
         }
     }
 
+    public synchronized void addWords(Map.Entry<Integer, Set<String>> cpWords){
+        Integer kind = cpWords.getKey();
+        Set<String> words = cpWords.getValue();
+
+        switch (kind){
+            case 1:
+                addAlbumWords(words);
+                break;
+            case 2:
+                addArtistWords(words);
+                break;
+            case 3:
+                addMusicWords(words);
+                break;
+            default:
+                addMainWord(words);
+                break;
+
+        }
+    }
+
+    private void addAlbumWords(Set<String> words) {
+    }
+
+    private void addArtistWords(Set<String> words) {
+    }
+
+    private void addMusicWords(Set<String> words) {
+    }
+
+    public void  addMainWord(Set<String> words){
+        this.addWords(_MainDict, words, props.getProperty(MAIN_DICT));
+    }
+
     private void loadMainDict(){
         _MainDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(MAIN_DICT), _MainDict);
-    }
-
-    public synchronized void  addMainWord(Set<String> words){
-        this.addWords(_MainDict, words, props.getProperty(MAIN_DICT));
     }
 
     private void loadDict(String path, Set<String> dict){

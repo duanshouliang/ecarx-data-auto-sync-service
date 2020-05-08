@@ -28,14 +28,19 @@ public class TaskDispatcher {
                     List<IndexTask> indexTasks = null;
                     if(lexicalItemCache.getLeftCapacity() < 1 || lexiconUpdatingMonitor.isUpdateLexicon()){
                         List<CacheEntity> cacheEntityList = lexicalItemCache.pull();
-                        Map<String, Set<String>> wordsToUpdate = new HashMap<>();
+                        Map<Integer, Set<String>> wordsToUpdate = new HashMap<>();
                         Set<String> lexicalItems = new HashSet<>();
                         indexTasks = new ArrayList<>();
                         //合并缓存，不同的cp需要更新不同的词库
                         KafkaRecordParser.merge(cacheEntityList, wordsToUpdate, lexicalItems, indexTasks);
                         //wordsToUpdate提交词库更新任务
                         //词库更新器,根据实际情况更新具体的词库
-
+                        if(wordsToUpdate.size() != 0){
+                            for(Map.Entry<Integer, Set<String>> entry : wordsToUpdate.entrySet()){
+                                //dictionary中新增同步数据源的更新词库的方法
+                                Dictionary.getInstance().addWords(entry);
+                            }
+                        }
                         lexiconUpdatedMonitor.setLexicalItems(lexicalItems);
                     }
                     if(lexiconUpdatedMonitor.isLexiconUpdated()){

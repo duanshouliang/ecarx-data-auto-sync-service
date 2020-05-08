@@ -7,17 +7,16 @@ import java.util.List;
 
 public class CacheEntity implements Serializable{
 
-    private String cp;
+    private Integer kind;
     private List<String> words;
     private List<IndexTask> tasks;
 
-
-    public String getCp() {
-        return cp;
+    public Integer getKind() {
+        return kind;
     }
 
-    public void setCp(String cp) {
-        this.cp = cp;
+    public void setKind(Integer kind) {
+        this.kind = kind;
     }
 
     public List<String> getWords() {
