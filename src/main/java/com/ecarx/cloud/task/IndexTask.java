@@ -1,4 +1,4 @@
-package com.ecarx.cloud.elasticsearch.task;
+package com.ecarx.cloud.task;
 
 import com.ecarx.cloud.elasticsearch.event.IndexEvent;
 import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 @AllArgsConstructor
 @Data
-public class IndexerTask implements Serializable{
+public class IndexTask implements Serializable{
     private IndexEvent event;
     private Indexer indexer;
 }

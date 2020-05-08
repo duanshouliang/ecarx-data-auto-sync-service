@@ -12,7 +12,7 @@ public class IndexerSelector {
     private static Indexer getInstance(String business, TransportClient transportClient){
         Indexer indexer = null;
         switch (business){
-            case "kuwo_music_canal_test":
+            case "kuwo_music.canal_test":
                 indexer = new CanalTestTableIndexer(transportClient);
                 break;
             default:

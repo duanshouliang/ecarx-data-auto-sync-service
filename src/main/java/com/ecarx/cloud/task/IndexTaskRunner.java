@@ -1,10 +1,9 @@
-package com.ecarx.cloud.elasticsearch.index.runner;
+package com.ecarx.cloud.task;
 
 import com.alibaba.fastjson.JSON;
 import com.ecarx.cloud.common.Result;
 import com.ecarx.cloud.elasticsearch.event.IndexEvent;
 import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
-import com.ecarx.cloud.elasticsearch.task.IndexerTask;
 import com.ecarx.cloud.enumeration.IndexEventEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +12,12 @@ import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class IndexRunner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IndexRunner.class);
-    private BlockingQueue<IndexerTask> tasks;
+public class IndexTaskRunner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexTaskRunner.class);
+    private BlockingQueue<IndexTask> tasks;
     private Thread worker;
 
-    public IndexRunner(String topic){
+    public IndexTaskRunner(String topic){
         tasks = new LinkedBlockingQueue<>(200);
         worker = new Thread(new Runnable() {
             @Override
@@ -26,7 +25,7 @@ public class IndexRunner {
                 int i=0;
                 while (!Thread.interrupted()){
                     LOGGER.info((i++)+"");
-                    IndexerTask task = null;
+                    IndexTask task = null;
                     try {
                         task = tasks.take();
                         LOGGER.info("contnet: "+JSON.toJSONString(task));
@@ -60,7 +59,7 @@ public class IndexRunner {
         worker.setName(topic);
         worker.start();
     }
-    public void submitTask(IndexerTask task){
+    public void submitTask(IndexTask task){
         tasks.add(task);
     }
 }

@@ -71,7 +71,7 @@ public class Dictionary {
         this.loadDict(props.getProperty(MAIN_DICT), _MainDict);
     }
 
-    private synchronized void  addMainWord(Set<String> words){
+    public synchronized void  addMainWord(Set<String> words){
         this.addWords(_MainDict, words, props.getProperty(MAIN_DICT));
     }
 

@@ -25,11 +25,6 @@ public class LexiconUpdatedMonitor {
             @Override
             public void run() {
                 while (!Thread.interrupted()){
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     if(!lexiconUpdated && null != lexicalItems && lexicalItems.size() != 0){
                         for(String lexicalItem : lexicalItems){
                             lexiconUpdated = isLexiconUpdateFinish(lexicalItem);
@@ -37,6 +32,12 @@ public class LexiconUpdatedMonitor {
                                 break;
                             }
                         }
+                    }
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             }

@@ -8,6 +8,7 @@ public class KafkaContext {
     private static KafkaContext context;
     private Properties configs = new Properties();
     private List<String> topics = new ArrayList<>();
+    private int cacheCapacity;
 
     private KafkaContext(){}
 
@@ -36,5 +37,13 @@ public class KafkaContext {
 
     public Properties getConfigs() {
         return configs;
+    }
+
+    public int getCacheCapacity() {
+        return cacheCapacity;
+    }
+
+    public void setCacheCapacity(int cacheCapacity) {
+        this.cacheCapacity = cacheCapacity;
     }
 }

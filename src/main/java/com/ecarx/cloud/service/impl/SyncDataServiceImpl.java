@@ -1,6 +1,6 @@
 package com.ecarx.cloud.service.impl;
 
-import com.ecarx.cloud.elasticsearch.index.runner.IndexRunner;
+import com.ecarx.cloud.task.IndexTaskRunner;
 import com.ecarx.cloud.kafka.KafkaConsumerWrapper;
 import com.ecarx.cloud.kafka.KafkaContext;
 import com.ecarx.cloud.service.SyncDataService;
@@ -40,8 +40,8 @@ public class SyncDataServiceImpl implements SyncDataService {
         //创建线程执行器
         executors = Executors.newCachedThreadPool(threadFactory);
         topics.forEach(topic ->{
-            IndexRunner indexRunner = new IndexRunner(topic +" elasticsearch thread");
-            KafkaConsumerWrapper consumer = new KafkaConsumerWrapper(context, indexRunner,transportClient);
+            IndexTaskRunner indexTaskRunner = new IndexTaskRunner(topic +" elasticsearch thread");
+            KafkaConsumerWrapper consumer = new KafkaConsumerWrapper(context, indexTaskRunner,transportClient);
             consumer.subscribe(topic);
             executors.submit(consumer);
         });

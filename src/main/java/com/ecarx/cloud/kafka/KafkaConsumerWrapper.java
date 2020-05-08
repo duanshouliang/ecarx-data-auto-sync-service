@@ -3,9 +3,8 @@ package com.ecarx.cloud.kafka;
 import com.alibaba.fastjson.JSON;
 import com.ecarx.cloud.cache.CacheEntity;
 import com.ecarx.cloud.cache.LexicalItemCache;
-import com.ecarx.cloud.dict.LexiconUpdater;
-import com.ecarx.cloud.elasticsearch.index.runner.IndexRunner;
-import com.ecarx.cloud.monitor.DataSyncMonitor;
+import com.ecarx.cloud.task.TaskDispatcher;
+import com.ecarx.cloud.task.IndexTaskRunner;
 import com.ecarx.cloud.monitor.LexiconUpdatedMonitor;
 import com.ecarx.cloud.monitor.LexiconUpdatingMonitor;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -24,25 +23,24 @@ public class KafkaConsumerWrapper implements Runnable {
     private static final String GROUP_ID_KEY="group.id";
     private KafkaContext context;
     private KafkaConsumer<String, String> consumer;
-    private IndexRunner indexRunner;
+    private IndexTaskRunner indexTaskRunner;
     private TransportClient transportClient;
     private LexicalItemCache lexicalItemCache;
     private LexiconUpdatingMonitor lexiconUpdatingMonitor;
     private LexiconUpdatedMonitor lexiconUpdatedMonitor;
-    private LexiconUpdater lexiconUpdater;
-    private int cacheCapacity;
+    private TaskDispatcher taskDispatcher;
 
-    public KafkaConsumerWrapper(KafkaContext context, IndexRunner indexRunner, TransportClient transportClient){
+    public KafkaConsumerWrapper(KafkaContext context, IndexTaskRunner indexTaskRunner, TransportClient transportClient){
         this.context = context;
-        this.indexRunner = indexRunner;
+        this.indexTaskRunner = indexTaskRunner;
         this.transportClient = transportClient;
-        lexicalItemCache = new LexicalItemCache(cacheCapacity);
+        lexicalItemCache = new LexicalItemCache(context.getCacheCapacity());
         lexiconUpdatingMonitor = new LexiconUpdatingMonitor();
         lexiconUpdatedMonitor = new LexiconUpdatedMonitor();
         lexiconUpdatedMonitor.setTransportClient(transportClient);
 
-        lexiconUpdater = new LexiconUpdater();
-        lexiconUpdater.setIndexRunner(indexRunner)
+        taskDispatcher = new TaskDispatcher();
+        taskDispatcher.setIndexTaskRunner(indexTaskRunner)
                 .setLexicalItemCache(lexicalItemCache)
                 .setLexiconUpdatingMonitor(lexiconUpdatingMonitor)
                 .setLexiconUpdatedMonitor(lexiconUpdatedMonitor);
@@ -77,30 +75,17 @@ public class KafkaConsumerWrapper implements Runnable {
                     e.printStackTrace();
                 }
                 LOGGER.info("Waiting dictionary update complete!");
-                continue;
             }
             for(int i=0;i<100;i++){
                 lexicalItemCache.put(new CacheEntity());
             }
             ConsumerRecords<String, String> records = consumer.poll(100);
-//            if (records.count() == 0) {
-//                LOGGER.info("No new message!");
-//            } else {
-//                //将解析records，抽取词项并放到缓存cache中
-//                //如果缓存cache已满，这暂停消费
-//                //将records转换List<CacheEntity> cacheEntities并加入到缓存
-//                //lexicalItemCache.put();
-//                records.forEach(record ->{
-//                    lexicalItemCache.put(new CacheEntity());
-//                });
-////                records.forEach(record -> {
-////                    LOGGER.info("Message content: " + record.value() + "partition[" + record.partition() + "] topic: " + record.topic());
-////                    IndexerTask indexerTask = IndexerTaskBuilder.build(record, transportClient);
-////                    if(null != indexerTask) {
-////                        indexRunner.submitTask(indexerTask);
-////                    }
-////                });
-//            }
+            records.forEach(record ->{
+                CacheEntity cacheEntity = KafkaRecordParser.parser(record, transportClient);
+                if(null != cacheEntity){
+                    lexicalItemCache.put(cacheEntity);
+                }
+            });
         }
     }
 }

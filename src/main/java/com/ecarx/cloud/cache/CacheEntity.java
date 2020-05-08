@@ -1,16 +1,15 @@
 package com.ecarx.cloud.cache;
 
-import com.ecarx.cloud.elasticsearch.task.IndexerTask;
+import com.ecarx.cloud.task.IndexTask;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 public class CacheEntity implements Serializable{
 
     private String cp;
     private List<String> words;
-    private List<IndexerTask> tasks;
+    private List<IndexTask> tasks;
 
 
     public String getCp() {
@@ -29,11 +28,11 @@ public class CacheEntity implements Serializable{
         this.words = words;
     }
 
-    public List<IndexerTask> getTasks() {
+    public List<IndexTask> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<IndexerTask> tasks) {
+    public void setTasks(List<IndexTask> tasks) {
         this.tasks = tasks;
     }
 }

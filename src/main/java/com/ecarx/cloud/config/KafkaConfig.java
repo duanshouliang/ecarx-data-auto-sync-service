@@ -28,6 +28,9 @@ public class KafkaConfig {
     private boolean enableAutoCommit;
     @Value("${spring.kafka.topics}")
     private String topics;
+    @Value("${spring.cache.capacity}")
+    private int cacheCapacity;
+
 
     @Bean
     public KafkaContext getKafkaContext(){
@@ -46,6 +49,10 @@ public class KafkaConfig {
         context.addConfig("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         /* value的序列化类 */
         context.addConfig("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        if(cacheCapacity < 1){
+            cacheCapacity = 5000;
+        }
+        context.setCacheCapacity(cacheCapacity);
         if(StringUtils.isNoneBlank(topics)){
             context.setTopics(Arrays.asList(StringUtils.split(topics, ";")));
         }
