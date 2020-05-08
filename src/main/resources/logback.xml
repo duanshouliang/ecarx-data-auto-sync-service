@@ -1,0 +1,33 @@
+<configuration>
+	<property name="LOG_HOME" value="logs"/>
+	<appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d-[%thread] %-5level - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="fileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>./logs/tuan-kafka/tuan-kafka.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${LOG_HOME}/tuan-kafka/tuan-kafka.%d{yyyy-MM-dd}.%i.log
+			</fileNamePattern>
+			<maxHistory>5</maxHistory>
+			<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<!-- or whenever the file size reaches 10MB -->
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d{MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+			<charset>UTF-8</charset>
+		</encoder>
+    </appender>
+	<root level="INFO">
+		<appender-ref ref="consoleAppender" />
+		<appender-ref ref="fileAppender" />
+	</root>
+
+	<logger name="com.ecarx.cloud" level="INFO">
+	</logger>
+
+</configuration>

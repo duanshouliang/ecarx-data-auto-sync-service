@@ -1,0 +1,27 @@
+spring:
+#  aop:
+#    proxy-target-class: true
+#    auto: false
+  application:
+    name: ecarx-data-auto-sync-service
+  elasticsearch:
+    ip: 106.75.218.68
+    port: 9310
+    cluster-name: ues-orf2snt1
+    cluster-nodes: 106.75.218.68
+  kafka:
+    servers : localhost:9092
+    group_id: data-pipeline
+    auto_commit_interval: 1000
+    session_timeout: 30000
+    max_poll_interval: 900000
+    auto_offset_reset: earliest
+    max_poll_records: 10
+    enable_auto_commit: true
+    topics: data_pipeline2
+server:
+  port: 12080
+  context-path: /data/service
+
+
+
