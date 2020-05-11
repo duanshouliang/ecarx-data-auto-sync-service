@@ -5,9 +5,10 @@ import com.ecarx.cloud.cache.CacheEntity;
 import com.ecarx.cloud.cache.LexicalItemCache;
 import com.ecarx.cloud.task.TaskDispatcher;
 import com.ecarx.cloud.task.IndexTaskRunner;
-import com.ecarx.cloud.monitor.LexiconUpdatedMonitor;
-import com.ecarx.cloud.monitor.LexiconUpdatingMonitor;
+import com.ecarx.cloud.monitor.DictUpdatedMonitor;
+import com.ecarx.cloud.monitor.DictUpdatingMonitor;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
@@ -26,8 +27,8 @@ public class KafkaConsumerWrapper implements Runnable {
     private IndexTaskRunner indexTaskRunner;
     private TransportClient transportClient;
     private LexicalItemCache lexicalItemCache;
-    private LexiconUpdatingMonitor lexiconUpdatingMonitor;
-    private LexiconUpdatedMonitor lexiconUpdatedMonitor;
+    private DictUpdatingMonitor dictUpdatingMonitor;
+    private DictUpdatedMonitor dictUpdatedMonitor;
     private TaskDispatcher taskDispatcher;
 
     public KafkaConsumerWrapper(KafkaContext context, IndexTaskRunner indexTaskRunner, TransportClient transportClient){
@@ -35,15 +36,16 @@ public class KafkaConsumerWrapper implements Runnable {
         this.indexTaskRunner = indexTaskRunner;
         this.transportClient = transportClient;
         lexicalItemCache = new LexicalItemCache(context.getCacheCapacity());
-        lexiconUpdatingMonitor = new LexiconUpdatingMonitor();
-        lexiconUpdatedMonitor = new LexiconUpdatedMonitor();
-        lexiconUpdatedMonitor.setTransportClient(transportClient);
+        dictUpdatingMonitor = new DictUpdatingMonitor();
+
+        dictUpdatedMonitor = new DictUpdatedMonitor();
+        dictUpdatedMonitor.setTransportClient(transportClient);
+        dictUpdatedMonitor.setIndexTaskRunner(indexTaskRunner);
 
         taskDispatcher = new TaskDispatcher();
-        taskDispatcher.setIndexTaskRunner(indexTaskRunner)
-                .setLexicalItemCache(lexicalItemCache)
-                .setLexiconUpdatingMonitor(lexiconUpdatingMonitor)
-                .setLexiconUpdatedMonitor(lexiconUpdatedMonitor);
+        taskDispatcher.setLexicalItemCache(lexicalItemCache)
+                .setDictUpdatingMonitor(dictUpdatingMonitor)
+                .setDictUpdatedMonitor(dictUpdatedMonitor);
     }
 
     public void subscribe(String topic){
@@ -68,7 +70,7 @@ public class KafkaConsumerWrapper implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             //若缓存大小不够则暂停消费
-            if(lexicalItemCache.getLeftCapacity() < 1 || lexiconUpdatingMonitor.isUpdateLexicon()){
+            if(lexicalItemCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingLexicon()){
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -76,16 +78,23 @@ public class KafkaConsumerWrapper implements Runnable {
                 }
                 LOGGER.info("Waiting dictionary update complete!");
             }
-            for(int i=0;i<100;i++){
-                lexicalItemCache.put(new CacheEntity());
-            }
             ConsumerRecords<String, String> records = consumer.poll(100);
-            records.forEach(record ->{
+            if(records.count()  <= 0){
+                continue;
+            }
+            for(ConsumerRecord<String, String> record : records){
                 CacheEntity cacheEntity = KafkaRecordParser.parser(record, transportClient);
-                if(null != cacheEntity){
-                    lexicalItemCache.put(cacheEntity);
+                if(null == cacheEntity){
+                    continue;
                 }
-            });
+                if(!cacheEntity.isDirectTask()){
+                    //有词项更新，则丢到队列中
+                    lexicalItemCache.put(cacheEntity);
+                }else{
+                    //无词项更新，提交数据同步任务
+                    indexTaskRunner.submitTask(cacheEntity.getTask());
+                }
+            }
         }
     }
 }

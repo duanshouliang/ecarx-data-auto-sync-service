@@ -4,8 +4,8 @@ import com.ecarx.cloud.cache.CacheEntity;
 import com.ecarx.cloud.cache.LexicalItemCache;
 import com.ecarx.cloud.dict.Dictionary;
 import com.ecarx.cloud.kafka.KafkaRecordParser;
-import com.ecarx.cloud.monitor.LexiconUpdatedMonitor;
-import com.ecarx.cloud.monitor.LexiconUpdatingMonitor;
+import com.ecarx.cloud.monitor.DictUpdatedMonitor;
+import com.ecarx.cloud.monitor.DictUpdatingMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,55 +16,47 @@ public class TaskDispatcher {
 
     private Thread worker;
     private LexicalItemCache lexicalItemCache;
-    private LexiconUpdatingMonitor lexiconUpdatingMonitor;
-    private LexiconUpdatedMonitor lexiconUpdatedMonitor;
-    private IndexTaskRunner indexTaskRunner;
+    private DictUpdatingMonitor dictUpdatingMonitor;
+    private DictUpdatedMonitor dictUpdatedMonitor;
 
     public TaskDispatcher(){
         worker = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (!Thread.interrupted()){
-                    List<IndexTask> indexTasks = null;
-                    if(lexicalItemCache.getLeftCapacity() < 1 || lexiconUpdatingMonitor.isUpdateLexicon()){
+                    if(lexicalItemCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingLexicon()){
                         List<CacheEntity> cacheEntityList = lexicalItemCache.pull();
-                        Map<Integer, Set<String>> wordsToUpdate = new HashMap<>();
-                        Set<String> lexicalItems = new HashSet<>();
-                        indexTasks = new ArrayList<>();
-                        //合并缓存，不同的cp需要更新不同的词库
-                        KafkaRecordParser.merge(cacheEntityList, wordsToUpdate, lexicalItems, indexTasks);
-                        //wordsToUpdate提交词库更新任务
-                        //词库更新器,根据实际情况更新具体的词库
-                        if(wordsToUpdate.size() != 0){
-                            for(Map.Entry<Integer, Set<String>> entry : wordsToUpdate.entrySet()){
-                                //dictionary中新增同步数据源的更新词库的方法
-                                Dictionary.getInstance().addWords(entry);
-                            }
+                        if(null == cacheEntityList || cacheEntityList.size() == 0){
+                            dictUpdatingMonitor.reset();
+                            continue;
                         }
-                        lexiconUpdatedMonitor.setLexicalItems(lexicalItems);
+                        //不同数据源对应的词项
+                        Map<Integer, Set<String>> cpWords = new HashMap<>();
+                        //每个数据中获取一个词项，用于判断词库是否更新完成
+                        Set<String> lexicalItems = new HashSet<>();
+                        //数据同步任务
+                        List<IndexTask>  indexTasks = new ArrayList<>();
+                        KafkaRecordParser.taskDispatch(cacheEntityList, cpWords, lexicalItems, indexTasks);
+
+                        dictUpdatedMonitor.setTasks(indexTasks);
+                        Dictionary.getInstance().addWordTasks(cpWords);
+                        dictUpdatedMonitor.setLexicalItems(lexicalItems);
                     }
-                    if(lexiconUpdatedMonitor.isLexiconUpdated()){
-                        submitTask(indexTasks);
-                        lexiconUpdatingMonitor.reset();
-                        lexiconUpdatedMonitor.reset();
+                    if(dictUpdatedMonitor.isLexiconUpdated()){
+                        dictUpdatingMonitor.reset();
+                        dictUpdatedMonitor.reset();
+                        LOGGER.info("Lexicon has been updated!");
                     }
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                LOGGER.info("Task dispatcher Thread has stop");
             }
         });
         worker.start();
-    }
-
-    public void submitTask(List<IndexTask> tasks){
-        if(null != tasks && tasks.size() != 0){
-            tasks.forEach(task ->{
-                indexTaskRunner.submitTask(task);
-            });
-        }
     }
 
     public TaskDispatcher setLexicalItemCache(LexicalItemCache lexicalItemCache) {
@@ -72,18 +64,13 @@ public class TaskDispatcher {
         return this;
     }
 
-    public TaskDispatcher setLexiconUpdatingMonitor(LexiconUpdatingMonitor lexiconUpdatingMonitor) {
-        this.lexiconUpdatingMonitor = lexiconUpdatingMonitor;
+    public TaskDispatcher setDictUpdatingMonitor(DictUpdatingMonitor dictUpdatingMonitor) {
+        this.dictUpdatingMonitor = dictUpdatingMonitor;
         return this;
     }
 
-    public TaskDispatcher setLexiconUpdatedMonitor(LexiconUpdatedMonitor lexiconUpdatedMonitor) {
-        this.lexiconUpdatedMonitor = lexiconUpdatedMonitor;
-        return this;
-    }
-
-    public TaskDispatcher setIndexTaskRunner(IndexTaskRunner indexTaskRunner) {
-        this.indexTaskRunner = indexTaskRunner;
+    public TaskDispatcher setDictUpdatedMonitor(DictUpdatedMonitor dictUpdatedMonitor) {
+        this.dictUpdatedMonitor = dictUpdatedMonitor;
         return this;
     }
 }

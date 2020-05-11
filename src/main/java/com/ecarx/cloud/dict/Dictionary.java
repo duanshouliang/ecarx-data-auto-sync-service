@@ -6,10 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Dictionary {
@@ -67,6 +64,14 @@ public class Dictionary {
         }
     }
 
+    public synchronized void addWordTasks(Map<Integer, Set<String>> wordTasks){
+        if(null == wordTasks || wordTasks.size() == 0){
+            return;
+        }
+        for(Map.Entry<Integer, Set<String>> entry : wordTasks.entrySet()){
+            this.addWords(entry);
+        }
+    }
     public synchronized void addWords(Map.Entry<Integer, Set<String>> cpWords){
         Integer kind = cpWords.getKey();
         Set<String> words = cpWords.getValue();
@@ -89,12 +94,15 @@ public class Dictionary {
     }
 
     private void addAlbumWords(Set<String> words) {
+        System.out.println(words);
     }
 
     private void addArtistWords(Set<String> words) {
+        System.out.println(words);
     }
 
     private void addMusicWords(Set<String> words) {
+        System.out.println(words);
     }
 
     public void  addMainWord(Set<String> words){

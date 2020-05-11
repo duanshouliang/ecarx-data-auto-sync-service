@@ -1,5 +1,7 @@
 package com.ecarx.cloud.monitor;
 
+import com.ecarx.cloud.task.IndexTask;
+import com.ecarx.cloud.task.IndexTaskRunner;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -13,14 +15,16 @@ import java.util.Set;
  * 监控词库是否更新完成
  *
  */
-public class LexiconUpdatedMonitor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LexiconUpdatedMonitor.class);
+public class DictUpdatedMonitor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DictUpdatedMonitor.class);
     private Set<String> lexicalItems;
     private Thread worker;
     private TransportClient transportClient;
+    private IndexTaskRunner indexTaskRunner;
     private boolean lexiconUpdated;
+    private List<IndexTask> tasks;
 
-    public LexiconUpdatedMonitor(){
+    public DictUpdatedMonitor(){
         worker = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -29,7 +33,10 @@ public class LexiconUpdatedMonitor {
                         for(String lexicalItem : lexicalItems){
                             lexiconUpdated = isLexiconUpdateFinish(lexicalItem);
                             if(!lexiconUpdated){
-                                break;
+                               continue;
+                            }else{
+                                //词库更新完成，则提交同步数据的任务
+                                submitTask(tasks);
                             }
                         }
                     }
@@ -40,6 +47,7 @@ public class LexiconUpdatedMonitor {
                         e.printStackTrace();
                     }
                 }
+                LOGGER.info("Lexicon updated monitor Thread has stop");
             }
         });
         worker.start();
@@ -68,14 +76,28 @@ public class LexiconUpdatedMonitor {
         return result;
     }
 
-    public LexiconUpdatedMonitor setTransportClient(TransportClient transportClient) {
+    public void submitTask(List<IndexTask> tasks){
+        if(null != tasks && tasks.size() != 0){
+            tasks.forEach(task ->{
+                indexTaskRunner.submitTask(task);
+            });
+        }
+    }
+
+    public DictUpdatedMonitor setTransportClient(TransportClient transportClient) {
         this.transportClient = transportClient;
+        return this;
+    }
+
+    public DictUpdatedMonitor setIndexTaskRunner(IndexTaskRunner indexTaskRunner) {
+        this.indexTaskRunner = indexTaskRunner;
         return this;
     }
 
     public void reset(){
         this.lexiconUpdated = false;
         this.lexicalItems = null;
+        this.tasks = null;
     }
 
     public boolean isLexiconUpdated() {
@@ -88,5 +110,13 @@ public class LexiconUpdatedMonitor {
 
     public void setLexicalItems(Set<String> lexicalItems) {
         this.lexicalItems = lexicalItems;
+    }
+
+    public List<IndexTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<IndexTask> tasks) {
+        this.tasks = tasks;
     }
 }

@@ -4,12 +4,15 @@ import com.ecarx.cloud.task.IndexTask;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 public class CacheEntity implements Serializable{
 
     private Integer kind;
-    private List<String> words;
-    private List<IndexTask> tasks;
+    private Set<String> words;
+    private IndexTask task;
+    private boolean directTask;
+
 
     public Integer getKind() {
         return kind;
@@ -19,19 +22,27 @@ public class CacheEntity implements Serializable{
         this.kind = kind;
     }
 
-    public List<String> getWords() {
+    public Set<String> getWords() {
         return words;
     }
 
-    public void setWords(List<String> words) {
+    public void setWords(Set<String> words) {
         this.words = words;
     }
 
-    public List<IndexTask> getTasks() {
-        return tasks;
+    public IndexTask getTask() {
+        return task;
     }
 
-    public void setTasks(List<IndexTask> tasks) {
-        this.tasks = tasks;
+    public void setTask(IndexTask task) {
+        this.task = task;
+    }
+
+    public boolean isDirectTask() {
+        return directTask;
+    }
+
+    public void setDirectTask(boolean directTask) {
+        this.directTask = directTask;
     }
 }

@@ -12,13 +12,6 @@ public class EventHandlerSelector {
 
     private static IndexEventHandler getInstance(String business){
         IndexEventHandler handler = null;
-        switch (business){
-            case "kuwo_music_canal_test":
-                handler = new CanalTestIndexEventHandler();
-                break;
-            default:
-                break;
-        }
-        return handler;
+        return new IndexEventHandler();
     }
 }

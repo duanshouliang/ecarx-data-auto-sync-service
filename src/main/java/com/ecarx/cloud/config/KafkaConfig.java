@@ -28,7 +28,7 @@ public class KafkaConfig {
     private boolean enableAutoCommit;
     @Value("${spring.kafka.topics}")
     private String topics;
-    @Value("${spring.cache.capacity}")
+    @Value("${spring.dict.cache.capacity}")
     private int cacheCapacity;
 
 

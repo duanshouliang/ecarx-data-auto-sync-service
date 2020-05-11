@@ -19,6 +19,9 @@ spring:
     max_poll_records: 10
     enable_auto_commit: true
     topics: data_pipeline2
+  dict:
+    cache:
+      capacity: 1000
 server:
   port: 12080
   context-path: /data/service
