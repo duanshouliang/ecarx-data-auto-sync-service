@@ -1,12 +1,12 @@
 package com.ecarx.cloud.kafka;
 
 import com.alibaba.fastjson.JSON;
-import com.ecarx.cloud.cache.CacheEntity;
-import com.ecarx.cloud.cache.LexicalItemCache;
+import com.ecarx.cloud.dict.cache.CacheEntity;
+import com.ecarx.cloud.dict.cache.DictCache;
 import com.ecarx.cloud.task.TaskDispatcher;
 import com.ecarx.cloud.task.IndexTaskRunner;
-import com.ecarx.cloud.monitor.DictUpdatedMonitor;
-import com.ecarx.cloud.monitor.DictUpdatingMonitor;
+import com.ecarx.cloud.dict.monitor.DictUpdatedMonitor;
+import com.ecarx.cloud.dict.monitor.DictUpdatingMonitor;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -26,7 +26,7 @@ public class KafkaConsumerWrapper implements Runnable {
     private KafkaConsumer<String, String> consumer;
     private IndexTaskRunner indexTaskRunner;
     private TransportClient transportClient;
-    private LexicalItemCache lexicalItemCache;
+    private DictCache dictCache;
     private DictUpdatingMonitor dictUpdatingMonitor;
     private DictUpdatedMonitor dictUpdatedMonitor;
     private TaskDispatcher taskDispatcher;
@@ -35,7 +35,7 @@ public class KafkaConsumerWrapper implements Runnable {
         this.context = context;
         this.indexTaskRunner = indexTaskRunner;
         this.transportClient = transportClient;
-        lexicalItemCache = new LexicalItemCache(context.getCacheCapacity());
+        dictCache = new DictCache(context.getCacheCapacity());
         dictUpdatingMonitor = new DictUpdatingMonitor();
 
         dictUpdatedMonitor = new DictUpdatedMonitor();
@@ -43,7 +43,7 @@ public class KafkaConsumerWrapper implements Runnable {
         dictUpdatedMonitor.setIndexTaskRunner(indexTaskRunner);
 
         taskDispatcher = new TaskDispatcher();
-        taskDispatcher.setLexicalItemCache(lexicalItemCache)
+        taskDispatcher.setDictCache(dictCache)
                 .setDictUpdatingMonitor(dictUpdatingMonitor)
                 .setDictUpdatedMonitor(dictUpdatedMonitor);
     }
@@ -70,7 +70,7 @@ public class KafkaConsumerWrapper implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             //若缓存大小不够则暂停消费
-            if(lexicalItemCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingLexicon()){
+            if(dictCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingDict()){
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -89,10 +89,10 @@ public class KafkaConsumerWrapper implements Runnable {
                 }
                 if(!cacheEntity.isDirectTask()){
                     //有词项更新，则丢到队列中
-                    lexicalItemCache.put(cacheEntity);
+                    dictCache.put(cacheEntity);
                 }else{
-                    //无词项更新，提交数据同步任务
-                    indexTaskRunner.submitTask(cacheEntity.getTask());
+                    //无词项更新，提交数据同步任务,待开发
+                    //indexTaskRunner.submitTask(cacheEntity.getTask());
                 }
             }
         }

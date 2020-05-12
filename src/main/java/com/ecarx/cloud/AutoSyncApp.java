@@ -9,11 +9,11 @@ import org.springframework.context.ConfigurableApplicationContext;
  *
  */
 @SpringBootApplication
-public class DataAutoSyncServiceApp
+public class AutoSyncApp
 {
     public static void main( String[] args )
     {
-        ConfigurableApplicationContext ca = SpringApplication.run(DataAutoSyncServiceApp.class,args);
+        ConfigurableApplicationContext ca = SpringApplication.run(AutoSyncApp.class,args);
 
     }
 }

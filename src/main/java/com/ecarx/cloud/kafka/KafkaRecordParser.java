@@ -1,7 +1,7 @@
 package com.ecarx.cloud.kafka;
 
 import com.alibaba.fastjson.JSONObject;
-import com.ecarx.cloud.cache.CacheEntity;
+import com.ecarx.cloud.dict.cache.CacheEntity;
 import com.ecarx.cloud.elasticsearch.event.IndexEvent;
 import com.ecarx.cloud.elasticsearch.handler.indexer.selector.EventHandlerSelector;
 import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
@@ -9,6 +9,9 @@ import com.ecarx.cloud.elasticsearch.index.indexer.selector.IndexerSelector;
 import com.ecarx.cloud.enumeration.AnalysisFieldEnum;
 import com.ecarx.cloud.enumeration.IndexEventEnum;
 import com.ecarx.cloud.task.IndexTask;
+import com.ecarx.cloud.util.ChineseDetectUtil;
+import com.ecarx.cloud.util.CommonUtil;
+import com.ecarx.cloud.util.ZhConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.elasticsearch.client.transport.TransportClient;
@@ -59,11 +62,40 @@ public class KafkaRecordParser {
             return cacheEntity;
         }
         if (StringUtils.isNotBlank(word)) {
-            Set<String> words = new HashSet<>();
-            words.add(word);
-            cacheEntity.setWords(words);
+            Set<String> words = handleWord(word, kind);
+            if (null != words && words.size() != 0) {
+                cacheEntity.setWords(words);
+            }
         }
         return cacheEntity;
+    }
+
+    private static Set<String> handleWord(String word, Integer kind) {
+        word = word.trim();
+        if (!ChineseDetectUtil.containChinese(word)) {
+            return null;
+        }
+
+        Set<String> words = new HashSet<>();
+        String wordWithoutSpecialCharacter = CommonUtil.removeSpecialCharacter(word);
+        if (StringUtils.isNotBlank(wordWithoutSpecialCharacter)) {
+            List<String> list = CommonUtil.splitByBlank(wordWithoutSpecialCharacter);
+            list.forEach(item -> {
+                if (StringUtils.isNotBlank(item)) {
+                    words.add(item.trim());
+                }
+            });
+        }
+
+        if (kind == AnalysisFieldEnum.ALBUM.getKind()) {
+            word = CommonUtil.removeParenthesisAndContent(word);
+        } else if (kind == AnalysisFieldEnum.ARTIST.getKind()) {
+            word = CommonUtil.removeBraketAndContent(word);
+        }
+        if (StringUtils.isNotBlank(word.trim())) {
+            words.add(ZhConverter.convert(word, ZhConverter.SIMPLIFIED));
+        }
+        return words;
     }
 
     public static void taskDispatch(List<CacheEntity> cacheEntityList, Map<Integer, Set<String>> cpWords, Set<String> lexicalItems, List<IndexTask> indexTasks) {

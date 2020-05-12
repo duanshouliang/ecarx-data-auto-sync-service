@@ -1,6 +1,6 @@
 package com.ecarx.cloud.dict;
 
-import com.ecarx.cloud.util.LanguageUtil;
+import com.ecarx.cloud.util.ChineseDetectUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +14,14 @@ public class Dictionary {
 
     private static Properties props;
     private static String MAIN_DICT = "main.dic";
+    private static String ALBUM_DICT = "album.dic";
+    private static String ARTIST_DICT = "artist.dic";
+    private static String MUSIC_DICT = "music.dic";
     private static String DICTIONARY_CONFIG = "dictionary.properties";
     private static Set<String> _MainDict;
+    private static Set<String> _AlbumDict;
+    private static Set<String> _ArtistDict;
+    private static Set<String> _MusicDict;
     private static Object lock = new Object();
     private static Dictionary dictionary;
     private static boolean loadFinish;
@@ -33,6 +39,9 @@ public class Dictionary {
     private Dictionary(){
         this.loadDicConfig();
         this.loadMainDict();
+        this.loadAlbumDict();
+        this.loadArtistDict();
+        this.loadMusicDict();
         loadFinish = true;
     }
 
@@ -78,13 +87,13 @@ public class Dictionary {
 
         switch (kind){
             case 1:
-                addAlbumWords(words);
+                addAlbumWord(words);
                 break;
             case 2:
-                addArtistWords(words);
+                addArtistWord(words);
                 break;
             case 3:
-                addMusicWords(words);
+                addMusicWord(words);
                 break;
             default:
                 addMainWord(words);
@@ -93,25 +102,61 @@ public class Dictionary {
         }
     }
 
-    private void addAlbumWords(Set<String> words) {
-        System.out.println(words);
-    }
-
-    private void addArtistWords(Set<String> words) {
-        System.out.println(words);
-    }
-
-    private void addMusicWords(Set<String> words) {
-        System.out.println(words);
-    }
-
     public void  addMainWord(Set<String> words){
-        this.addWords(_MainDict, words, props.getProperty(MAIN_DICT));
+        Set<String> newWords = this.filter(_MainDict, words);
+        if(newWords.size() == 0){
+            LOGGER.info("Words already exist of main dict...");
+            return;
+        }
+        this.addWords(_MainDict, newWords, props.getProperty(MAIN_DICT));
+    }
+
+    public void  addAlbumWord(Set<String> words){
+
+        Set<String> newWords = this.filter(_AlbumDict, words);
+        if(newWords.size() == 0){
+            LOGGER.info("Words already exist  of album dict...");
+            return;
+        }
+        this.addWords(_AlbumDict, newWords, props.getProperty(ALBUM_DICT));
+    }
+
+    public void  addArtistWord(Set<String> words){
+        Set<String> newWords = this.filter(_ArtistDict, words);
+        if(newWords.size() == 0){
+            LOGGER.info("Words already exist  of artist dict...");
+            return;
+        }
+        this.addWords(_ArtistDict, newWords, props.getProperty(ARTIST_DICT));
+    }
+
+    public void  addMusicWord(Set<String> words){
+        Set<String> newWords = this.filter(_MusicDict, words);
+        if(newWords.size() == 0){
+            LOGGER.info("All Words already exist  of music dict...");
+            return;
+        }
+        this.addWords(_MusicDict, newWords, props.getProperty(MUSIC_DICT));
     }
 
     private void loadMainDict(){
         _MainDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(MAIN_DICT), _MainDict);
+    }
+
+    private void loadAlbumDict(){
+        _AlbumDict = new ConcurrentSkipListSet<>();
+        this.loadDict(props.getProperty(ALBUM_DICT), _AlbumDict);
+    }
+
+    private void loadArtistDict(){
+        _ArtistDict = new ConcurrentSkipListSet<>();
+        this.loadDict(props.getProperty(ARTIST_DICT), _ArtistDict);
+    }
+
+    private void loadMusicDict(){
+        _MusicDict = new ConcurrentSkipListSet<>();
+        this.loadDict(props.getProperty(MUSIC_DICT), _MusicDict);
     }
 
     private void loadDict(String path, Set<String> dict){
@@ -130,7 +175,7 @@ public class Dictionary {
             String theWord = null;
             do {
                 theWord = br.readLine();
-                if(StringUtils.isNotBlank(theWord) && LanguageUtil.isChinese(theWord.trim())){
+                if(StringUtils.isNotBlank(theWord) && ChineseDetectUtil.isFullChinese(theWord.trim())){
                     dict.add(theWord.trim());
                 }
             } while (theWord != null);
@@ -160,12 +205,13 @@ public class Dictionary {
             fileWriter = new FileWriter(path, true);
             bw = new BufferedWriter(fileWriter);
             for (String word : words) {
-                if(LanguageUtil.isChinese(word)) {
+                if(ChineseDetectUtil.isFullChinese(word)) {
                     dict.add(word);
                     bw.write(word + "\r\n");
                 }
             }
             bw.flush();
+            LOGGER.info("Add words " + words + "to " + path + " completed");
         } catch (IOException e) {
             LOGGER.error("Add words to {} with exception {}, stack {}", path, e.getMessage(), Arrays.toString(e.getStackTrace()));
         } finally {
@@ -186,5 +232,15 @@ public class Dictionary {
 
     public static boolean isLoadFinish(){
         return loadFinish;
+    }
+
+    private Set<String> filter(Set<String> cache, Set<String> words){
+        Set<String> result = new ConcurrentSkipListSet();
+        for(String word : words){
+            if(!cache.contains(word)){
+                result.add(word);
+            }
+        }
+        return result;
     }
 }

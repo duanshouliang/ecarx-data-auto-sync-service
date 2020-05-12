@@ -1,4 +1,4 @@
-package com.ecarx.cloud.monitor;
+package com.ecarx.cloud.dict.monitor;
 
 import com.ecarx.cloud.task.IndexTask;
 import com.ecarx.cloud.task.IndexTaskRunner;
@@ -21,7 +21,7 @@ public class DictUpdatedMonitor {
     private Thread worker;
     private TransportClient transportClient;
     private IndexTaskRunner indexTaskRunner;
-    private boolean lexiconUpdated;
+    private boolean dictUpdated;
     private List<IndexTask> tasks;
 
     public DictUpdatedMonitor(){
@@ -29,31 +29,31 @@ public class DictUpdatedMonitor {
             @Override
             public void run() {
                 while (!Thread.interrupted()){
-                    if(!lexiconUpdated && null != lexicalItems && lexicalItems.size() != 0){
-                        for(String lexicalItem : lexicalItems){
-                            lexiconUpdated = isLexiconUpdateFinish(lexicalItem);
-                            if(!lexiconUpdated){
-                               continue;
-                            }else{
-                                //词库更新完成，则提交同步数据的任务
-                                submitTask(tasks);
-                            }
-                        }
-                    }
-
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(6000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    if(!dictUpdated && null != lexicalItems && lexicalItems.size() != 0){
+                        for(String lexicalItem : lexicalItems){
+                            dictUpdated = isDictUpdated(lexicalItem);
+                            if(!dictUpdated){
+                               continue;
+                            }else{
+                                //词库更新完成，则提交同步数据的任务,待开发
+                                LOGGER.info("Diction has updated for words, start submit sync data task");
+                                //submitTask(tasks);
+                            }
+                        }
+                    }
                 }
-                LOGGER.info("Lexicon updated monitor Thread has stop");
+                LOGGER.info("Dictionary updated monitor Thread has stop");
             }
         });
         worker.start();
     }
 
-    private boolean isLexiconUpdateFinish(String lexicalItem){
+    private boolean isDictUpdated(String lexicalItem){
         boolean result = false;
         AnalyzeRequest analyzeRequest = new AnalyzeRequest()
                 .text(lexicalItem)
@@ -71,7 +71,7 @@ public class DictUpdatedMonitor {
                 }
             }
         }catch (Exception e){
-            LOGGER.error("Judge lexicon update finish with exception {}", e.getMessage());
+            LOGGER.error("Judge dictionary update finish with exception {}", e.getMessage());
         }
         return result;
     }
@@ -95,13 +95,13 @@ public class DictUpdatedMonitor {
     }
 
     public void reset(){
-        this.lexiconUpdated = false;
+        this.dictUpdated = false;
         this.lexicalItems = null;
         this.tasks = null;
     }
 
-    public boolean isLexiconUpdated() {
-        return lexiconUpdated;
+    public boolean isDictUpdated() {
+        return dictUpdated;
     }
 
     public Set<String> getLexicalItems() {

@@ -5,10 +5,10 @@ spring:
   application:
     name: ecarx-data-auto-sync-service
   elasticsearch:
-    ip: 106.75.218.68
-    port: 9310
-    cluster-name: ues-orf2snt1
-    cluster-nodes: 106.75.218.68
+    ip: 127.0.0.1
+    port: 9300
+    cluster-name: my-application
+    cluster-nodes: 127.0.0.1
   kafka:
     servers : localhost:9092
     group_id: data-pipeline

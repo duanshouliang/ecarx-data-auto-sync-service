@@ -1,9 +1,8 @@
-package com.ecarx.cloud.cache;
+package com.ecarx.cloud.dict.cache;
 
 import com.ecarx.cloud.task.IndexTask;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 public class CacheEntity implements Serializable{

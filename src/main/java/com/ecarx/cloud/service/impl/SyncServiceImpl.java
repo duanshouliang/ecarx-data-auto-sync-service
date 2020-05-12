@@ -3,7 +3,7 @@ package com.ecarx.cloud.service.impl;
 import com.ecarx.cloud.task.IndexTaskRunner;
 import com.ecarx.cloud.kafka.KafkaConsumerWrapper;
 import com.ecarx.cloud.kafka.KafkaContext;
-import com.ecarx.cloud.service.SyncDataService;
+import com.ecarx.cloud.service.SyncService;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.elasticsearch.client.transport.TransportClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 @Service
-public class SyncDataServiceImpl implements SyncDataService {
+public class SyncServiceImpl implements SyncService {
 
     @Autowired
     private KafkaContext context;

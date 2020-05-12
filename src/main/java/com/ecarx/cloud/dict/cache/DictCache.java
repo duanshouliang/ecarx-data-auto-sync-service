@@ -1,13 +1,13 @@
-package com.ecarx.cloud.cache;
+package com.ecarx.cloud.dict.cache;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class LexicalItemCache {
+public class DictCache {
     private ArrayBlockingQueue<CacheEntity> queue;
     private int left;
-    public LexicalItemCache(int capacity){
+    public DictCache(int capacity){
         this.left = capacity;
         queue = new ArrayBlockingQueue<>(capacity);
     }

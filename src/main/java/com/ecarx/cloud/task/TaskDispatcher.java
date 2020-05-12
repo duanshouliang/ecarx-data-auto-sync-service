@@ -1,11 +1,11 @@
 package com.ecarx.cloud.task;
 
-import com.ecarx.cloud.cache.CacheEntity;
-import com.ecarx.cloud.cache.LexicalItemCache;
 import com.ecarx.cloud.dict.Dictionary;
+import com.ecarx.cloud.dict.cache.CacheEntity;
+import com.ecarx.cloud.dict.cache.DictCache;
+import com.ecarx.cloud.dict.monitor.DictUpdatedMonitor;
+import com.ecarx.cloud.dict.monitor.DictUpdatingMonitor;
 import com.ecarx.cloud.kafka.KafkaRecordParser;
-import com.ecarx.cloud.monitor.DictUpdatedMonitor;
-import com.ecarx.cloud.monitor.DictUpdatingMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,7 @@ public class TaskDispatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskDispatcher.class);
 
     private Thread worker;
-    private LexicalItemCache lexicalItemCache;
+    private DictCache dictCache;
     private DictUpdatingMonitor dictUpdatingMonitor;
     private DictUpdatedMonitor dictUpdatedMonitor;
 
@@ -24,8 +24,8 @@ public class TaskDispatcher {
             @Override
             public void run() {
                 while (!Thread.interrupted()){
-                    if(lexicalItemCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingLexicon()){
-                        List<CacheEntity> cacheEntityList = lexicalItemCache.pull();
+                    if(dictCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingDict()){
+                        List<CacheEntity> cacheEntityList = dictCache.pull();
                         if(null == cacheEntityList || cacheEntityList.size() == 0){
                             dictUpdatingMonitor.reset();
                             continue;
@@ -42,10 +42,10 @@ public class TaskDispatcher {
                         Dictionary.getInstance().addWordTasks(cpWords);
                         dictUpdatedMonitor.setLexicalItems(lexicalItems);
                     }
-                    if(dictUpdatedMonitor.isLexiconUpdated()){
+                    if(dictUpdatedMonitor.isDictUpdated()){
                         dictUpdatingMonitor.reset();
                         dictUpdatedMonitor.reset();
-                        LOGGER.info("Lexicon has been updated!");
+                        LOGGER.info("Dictionary has been updated!");
                     }
                     try {
                         Thread.sleep(1000);
@@ -59,8 +59,8 @@ public class TaskDispatcher {
         worker.start();
     }
 
-    public TaskDispatcher setLexicalItemCache(LexicalItemCache lexicalItemCache) {
-        this.lexicalItemCache = lexicalItemCache;
+    public TaskDispatcher setDictCache(DictCache dictCache) {
+        this.dictCache = dictCache;
         return this;
     }
 

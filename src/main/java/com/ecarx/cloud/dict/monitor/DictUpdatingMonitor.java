@@ -1,4 +1,4 @@
-package com.ecarx.cloud.monitor;
+package com.ecarx.cloud.dict.monitor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ public class DictUpdatingMonitor {
     /**
      * 是否开始同步词库
      */
-    private boolean updatingLexicon = false;
+    private boolean updatingDict = false;
 
     private Thread worker;
 
@@ -31,25 +31,25 @@ public class DictUpdatingMonitor {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(!updatingLexicon){
+                    if(!updatingDict){
                         int current = counter.decrementAndGet();
                         if(current == 0){
-                            updatingLexicon = true;
+                            updatingDict = true;
                         }
                     }
                 }
-                LOGGER.info("Lexicon updating monitor Thread has stop");
+                LOGGER.info("Dictionary updating monitor Thread has stop");
             }
         });
         worker.start();
     }
 
-    public boolean isUpdatingLexicon(){
-        return updatingLexicon;
+    public boolean isUpdatingDict(){
+        return updatingDict;
     }
 
     public void reset(){
         this.counter.set(50);
-        this.updatingLexicon = false;
+        this.updatingDict = false;
     }
 }
