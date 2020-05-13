@@ -1,7 +1,7 @@
-package com.ecarx.cloud.elasticsearch.index.indexer.selector;
+package com.ecarx.cloud.business.music.factory;
 
-import com.ecarx.cloud.elasticsearch.index.indexer.CanalTestTableIndexer;
-import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
+import com.ecarx.cloud.business.music.test.CanalTestTableIndexer;
+import com.ecarx.cloud.elasticsearch.index.Indexer;
 import org.elasticsearch.client.transport.TransportClient;
 
 public class IndexerSelector {

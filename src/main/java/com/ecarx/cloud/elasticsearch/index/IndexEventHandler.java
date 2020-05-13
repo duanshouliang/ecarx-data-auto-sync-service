@@ -1,7 +1,6 @@
-package com.ecarx.cloud.elasticsearch.handler.indexer;
+package com.ecarx.cloud.elasticsearch.index;
 
 
-import com.ecarx.cloud.elasticsearch.event.IndexEvent;
 import com.ecarx.cloud.kafka.KafkaMessageEntity;
 
 /**

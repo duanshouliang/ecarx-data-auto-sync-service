@@ -1,7 +1,8 @@
-package com.ecarx.cloud.elasticsearch.handler.indexer;
+package com.ecarx.cloud.business.music.test;
 
 import com.alibaba.fastjson.JSONObject;
-import com.ecarx.cloud.elasticsearch.event.IndexEvent;
+import com.ecarx.cloud.elasticsearch.index.IndexEvent;
+import com.ecarx.cloud.elasticsearch.index.IndexEventHandler;
 import com.ecarx.cloud.enumeration.IndexEventEnum;
 import com.ecarx.cloud.kafka.KafkaMessageEntity;
 import org.slf4j.Logger;

@@ -1,8 +1,7 @@
-package com.ecarx.cloud.elasticsearch.handler.indexer.selector;
+package com.ecarx.cloud.business.music.factory;
 
 
-import com.ecarx.cloud.elasticsearch.handler.indexer.CanalTestIndexEventHandler;
-import com.ecarx.cloud.elasticsearch.handler.indexer.IndexEventHandler;
+import com.ecarx.cloud.elasticsearch.index.IndexEventHandler;
 
 public class EventHandlerSelector {
 

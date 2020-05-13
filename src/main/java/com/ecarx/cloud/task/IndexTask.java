@@ -1,7 +1,7 @@
 package com.ecarx.cloud.task;
 
-import com.ecarx.cloud.elasticsearch.event.IndexEvent;
-import com.ecarx.cloud.elasticsearch.index.indexer.Indexer;
+import com.ecarx.cloud.elasticsearch.index.IndexEvent;
+import com.ecarx.cloud.elasticsearch.index.Indexer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

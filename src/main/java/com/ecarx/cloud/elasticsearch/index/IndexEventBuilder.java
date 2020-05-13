@@ -1,7 +1,5 @@
-package com.ecarx.cloud.elasticsearch.event.builder;
+package com.ecarx.cloud.elasticsearch.index;
 
-
-import com.ecarx.cloud.elasticsearch.handler.indexer.IndexEventHandler;
 
 public class IndexEventBuilder {
     public static IndexEventHandler build(String business){

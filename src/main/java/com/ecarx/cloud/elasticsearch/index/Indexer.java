@@ -1,8 +1,7 @@
-package com.ecarx.cloud.elasticsearch.index.indexer;
+package com.ecarx.cloud.elasticsearch.index;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ecarx.cloud.common.Result;
-import com.ecarx.cloud.elasticsearch.event.IndexEvent;
 import com.ecarx.cloud.elasticsearch.util.ScriptUtil;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;

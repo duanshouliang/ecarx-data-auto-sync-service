@@ -1,4 +1,4 @@
-package com.ecarx.cloud.elasticsearch.event;
+package com.ecarx.cloud.elasticsearch.search;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

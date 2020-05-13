@@ -1,7 +1,8 @@
-package com.ecarx.cloud.elasticsearch.index.indexer;
+package com.ecarx.cloud.business.music.test;
 
 import com.ecarx.cloud.common.Result;
-import com.ecarx.cloud.elasticsearch.event.IndexEvent;
+import com.ecarx.cloud.elasticsearch.index.IndexEvent;
+import com.ecarx.cloud.elasticsearch.index.Indexer;
 import org.elasticsearch.client.transport.TransportClient;
 
 
