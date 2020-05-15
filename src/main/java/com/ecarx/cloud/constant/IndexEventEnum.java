@@ -1,4 +1,4 @@
-package com.ecarx.cloud.enumeration;
+package com.ecarx.cloud.constant;
 
 public enum IndexEventEnum {
     ADD("insert"),

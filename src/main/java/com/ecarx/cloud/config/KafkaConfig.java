@@ -16,6 +16,8 @@ public class KafkaConfig {
     private String groupId;
     @Value("${spring.kafka.auto_commit_interval}")
     private long autoCommitInterval;
+    @Value("${spring.kafka.max_partition_fetch_bytes}")
+    private int maxPartitionFetchBytes;
     @Value("${spring.kafka.session_timeout}")
     private long sessionTimeout;
     @Value("${spring.kafka.max_poll_interval}")
@@ -38,7 +40,8 @@ public class KafkaConfig {
         context.addConfig("bootstrap.servers", servers);
         /* 是否自动确认offset */
         context.addConfig("enable.auto.commit", enableAutoCommit);
-        context.addConfig("max.poll.records", maxPollRecords);
+        context.addConfig("max.partition.fetch.bytes", maxPartitionFetchBytes);
+//        context.addConfig("max.poll.records", 1000);
 //        context.addConfig("group.id", groupId);
         /* 自动确认offset的时间间隔 */
         context.addConfig("auto.commit.interval.ms", autoCommitInterval);

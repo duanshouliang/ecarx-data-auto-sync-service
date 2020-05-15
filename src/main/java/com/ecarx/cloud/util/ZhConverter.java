@@ -19,11 +19,6 @@ public class ZhConverter {
         propertyFiles[TRADITIONAL] = "zh2Hant.properties"; //附件下载
         propertyFiles[SIMPLIFIED] = "zh2Hans.properties";  //附件下载
     }
-
-    public static void main(String[] args) {
-        System.out.println(ZhConverter.convert("段曙亮",1));
-    }
-
     /**
      * @param converterType 0 for traditional and 1 for simplified
      * @return

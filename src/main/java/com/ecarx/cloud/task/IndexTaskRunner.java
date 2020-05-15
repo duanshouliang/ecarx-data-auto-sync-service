@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.ecarx.cloud.common.Result;
 import com.ecarx.cloud.elasticsearch.index.IndexEvent;
 import com.ecarx.cloud.elasticsearch.index.Indexer;
-import com.ecarx.cloud.enumeration.IndexEventEnum;
+import com.ecarx.cloud.constant.IndexEventEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

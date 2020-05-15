@@ -64,12 +64,14 @@ public class KafkaConsumerWrapper implements Runnable {
                 LOGGER.info(String.format("Kafka consumer assigned response %s for topic %s", JSON.toJSONString(partitions),topic));
             }
         };
+        //指定分区消费
+//        consumer.assign();
         consumer.subscribe(topics, listener);
     }
     @Override
     public void run() {
         while (!Thread.interrupted()) {
-            //若缓存大小不够则暂停消费
+            //缓存满或者词典正在更新、则暂停消费（暂停从kafka中拉取数据）
             if(dictCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingDict()){
                 try {
                     Thread.sleep(100);
@@ -80,9 +82,13 @@ public class KafkaConsumerWrapper implements Runnable {
             }
             ConsumerRecords<String, String> records = consumer.poll(100);
             if(records.count()  <= 0){
+                LOGGER.info("Nothing received from kafka");
                 continue;
+            }else{
+                LOGGER.info("Received "+records.count()+" records  from kafka");
             }
             for(ConsumerRecord<String, String> record : records){
+                LOGGER.info("Received data from kafka: " + JSON.toJSONString(record.value()));
                 CacheEntity cacheEntity = KafkaRecordParser.parser(record, transportClient);
                 if(null == cacheEntity){
                     continue;

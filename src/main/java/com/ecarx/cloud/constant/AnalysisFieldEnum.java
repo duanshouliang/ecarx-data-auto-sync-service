@@ -1,4 +1,4 @@
-package com.ecarx.cloud.enumeration;
+package com.ecarx.cloud.constant;
 
 public enum AnalysisFieldEnum {
     ALBUM("album", "album_name", 1),
@@ -11,7 +11,8 @@ public enum AnalysisFieldEnum {
 
     KUWO_MUSIC_KW_ALBUM("kuwo_music.kw_album", "album_name", 1),
     KUWO_MUSIC_KW_ARTIST("kuwo_music.kw_artist", "artist_name", 2),
-    KUWO_MUSIC_KW_MUSIC("kuwo_music.kw_music", "music_name", 3);
+    KUWO_MUSIC_KW_MUSIC("kuwo_music.kw_music", "music_name", 3),
+    KUWO_MUSIC_CANAL_TEST("kuwo_music.canal_test", "name", 3);
 
     private String table;
     private String field;

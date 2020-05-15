@@ -3,7 +3,7 @@ package com.ecarx.cloud.business.music.test;
 import com.alibaba.fastjson.JSONObject;
 import com.ecarx.cloud.elasticsearch.index.IndexEvent;
 import com.ecarx.cloud.elasticsearch.index.IndexEventHandler;
-import com.ecarx.cloud.enumeration.IndexEventEnum;
+import com.ecarx.cloud.constant.IndexEventEnum;
 import com.ecarx.cloud.kafka.KafkaMessageEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

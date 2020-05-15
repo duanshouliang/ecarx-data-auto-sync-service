@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 监控词库是否更新完成
@@ -23,27 +25,37 @@ public class DictUpdatedMonitor {
     private IndexTaskRunner indexTaskRunner;
     private boolean dictUpdated;
     private List<IndexTask> tasks;
+    private boolean checking;
 
     public DictUpdatedMonitor(){
         worker = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (!Thread.interrupted()){
-                    try {
-                        Thread.sleep(6000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if(!dictUpdated && null != lexicalItems && lexicalItems.size() != 0){
-                        for(String lexicalItem : lexicalItems){
-                            dictUpdated = isDictUpdated(lexicalItem);
-                            if(!dictUpdated){
-                               continue;
-                            }else{
-                                //词库更新完成，则提交同步数据的任务,待开发
-                                LOGGER.info("Diction has updated for words, start submit sync data task");
-                                //submitTask(tasks);
+                    if(checking && !dictUpdated){
+                        if(null == lexicalItems || lexicalItems.size() == 0){
+                            //submitTask(tasks);
+                            checking = false;
+                            LOGGER.info("Diction has updated for words, start submit sync data task");
+                        }else {
+                            for (String lexicalItem : lexicalItems) {
+                                boolean result = isDictUpdated(lexicalItem);
+                                if (!result) {
+                                    continue;
+                                } else {
+                                    //词库更新完成，则提交同步数据的任务,待开发
+                                    checking = false;
+                                    dictUpdated = true;
+                                    //submitTask(tasks);
+                                    LOGGER.info("Diction has updated for words, start submit sync data task");
+                                }
                             }
+                        }
+                    }else {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -66,7 +78,7 @@ public class DictUpdatedMonitor {
 
             for(AnalyzeResponse.AnalyzeToken token : tokens){
                 if(lexicalItem.equals(token.getTerm())){
-                    result = false;
+                    result = true;
                     break;
                 }
             }
@@ -98,10 +110,15 @@ public class DictUpdatedMonitor {
         this.dictUpdated = false;
         this.lexicalItems = null;
         this.tasks = null;
+        this.checking = false;
     }
 
     public boolean isDictUpdated() {
         return dictUpdated;
+    }
+
+    public void setDictUpdated(boolean dictUpdated) {
+        this.dictUpdated = dictUpdated;
     }
 
     public Set<String> getLexicalItems() {
@@ -118,5 +135,13 @@ public class DictUpdatedMonitor {
 
     public void setTasks(List<IndexTask> tasks) {
         this.tasks = tasks;
+    }
+
+    public boolean isChecking() {
+        return checking;
+    }
+
+    public void setChecking(boolean checking) {
+        this.checking = checking;
     }
 }

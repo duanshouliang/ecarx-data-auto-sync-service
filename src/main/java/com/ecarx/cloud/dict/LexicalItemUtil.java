@@ -1,6 +1,6 @@
 package com.ecarx.cloud.dict;
 
-import com.ecarx.cloud.enumeration.AnalysisFieldEnum;
+import com.ecarx.cloud.constant.AnalysisFieldEnum;
 import com.ecarx.cloud.util.ChineseDetectUtil;
 import com.ecarx.cloud.util.CommonUtil;
 import com.ecarx.cloud.util.ZhConverter;

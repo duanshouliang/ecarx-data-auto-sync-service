@@ -61,8 +61,4 @@ public class CommonUtil {
         }
         return text;
     }
-
-    public static void main(String[] args) {
-        System.out.println(removeParenthesisAndContent("duan (s(h)u)  liang"));
-    }
 }

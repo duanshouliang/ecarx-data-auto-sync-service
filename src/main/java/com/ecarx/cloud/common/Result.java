@@ -32,7 +32,4 @@ public class Result<T> {
         return msg;
     }
 
-    public static void main(String[] args) {
-        Result<String> result = Result.failed("xxxxx");
-    }
 }

@@ -18,13 +18,20 @@ public class Dictionary {
     private static String ARTIST_DICT = "artist.dic";
     private static String MUSIC_DICT = "music.dic";
     private static String DICTIONARY_CONFIG = "dictionary.properties";
-    private static Set<String> _MainDict;
-    private static Set<String> _AlbumDict;
-    private static Set<String> _ArtistDict;
-    private static Set<String> _MusicDict;
+    private static Set<String> _MainDict = new ConcurrentSkipListSet<>();
+    private static Set<String> _AlbumDict = new ConcurrentSkipListSet<>();
+    private static Set<String> _ArtistDict = new ConcurrentSkipListSet<>();
+    private static Set<String> _MusicDict = new ConcurrentSkipListSet<>();
     private static Object lock = new Object();
     private static Dictionary dictionary;
-    private static boolean loadFinish;
+    public static Map<Integer, Set<String>> _ALL_DICT= new HashMap<>();
+
+    static{
+        _ALL_DICT.put(0, _MainDict);
+        _ALL_DICT.put(1, _AlbumDict);
+        _ALL_DICT.put(2, _ArtistDict);
+        _ALL_DICT.put(3, _MusicDict);
+    }
 
     public static Dictionary getInstance(){
         if(null == dictionary){
@@ -42,7 +49,6 @@ public class Dictionary {
         this.loadAlbumDict();
         this.loadArtistDict();
         this.loadMusicDict();
-        loadFinish = true;
     }
 
     private void loadDicConfig(){
@@ -103,59 +109,47 @@ public class Dictionary {
     }
 
     public void  addMainWord(Set<String> words){
-        Set<String> newWords = this.filter(_MainDict, words);
-        if(newWords.size() == 0){
-            LOGGER.info("Words already exist of main dict...");
+        if(words.size() == 0){
             return;
         }
-        this.addWords(_MainDict, newWords, props.getProperty(MAIN_DICT));
+        this.addWords(_MainDict, words, props.getProperty(MAIN_DICT));
     }
 
     public void  addAlbumWord(Set<String> words){
 
-        Set<String> newWords = this.filter(_AlbumDict, words);
-        if(newWords.size() == 0){
-            LOGGER.info("Words already exist  of album dict...");
+        if(words.size() == 0){
             return;
         }
-        this.addWords(_AlbumDict, newWords, props.getProperty(ALBUM_DICT));
+        this.addWords(_AlbumDict, words, props.getProperty(ALBUM_DICT));
     }
 
     public void  addArtistWord(Set<String> words){
-        Set<String> newWords = this.filter(_ArtistDict, words);
-        if(newWords.size() == 0){
-            LOGGER.info("Words already exist  of artist dict...");
+        if(words.size() == 0){
             return;
         }
-        this.addWords(_ArtistDict, newWords, props.getProperty(ARTIST_DICT));
+        this.addWords(_ArtistDict, words, props.getProperty(ARTIST_DICT));
     }
 
     public void  addMusicWord(Set<String> words){
-        Set<String> newWords = this.filter(_MusicDict, words);
-        if(newWords.size() == 0){
-            LOGGER.info("All Words already exist  of music dict...");
+        if(words.size() == 0){
             return;
         }
-        this.addWords(_MusicDict, newWords, props.getProperty(MUSIC_DICT));
+        this.addWords(_MusicDict, words, props.getProperty(MUSIC_DICT));
     }
 
     private void loadMainDict(){
-        _MainDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(MAIN_DICT), _MainDict);
     }
 
     private void loadAlbumDict(){
-        _AlbumDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(ALBUM_DICT), _AlbumDict);
     }
 
     private void loadArtistDict(){
-        _ArtistDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(ARTIST_DICT), _ArtistDict);
     }
 
     private void loadMusicDict(){
-        _MusicDict = new ConcurrentSkipListSet<>();
         this.loadDict(props.getProperty(MUSIC_DICT), _MusicDict);
     }
 
@@ -204,12 +198,14 @@ public class Dictionary {
             }
             fileWriter = new FileWriter(path, true);
             bw = new BufferedWriter(fileWriter);
+            StringBuilder sb = new StringBuilder("");
             for (String word : words) {
-                if(ChineseDetectUtil.isFullChinese(word)) {
+//                if(ChineseDetectUtil.isFullChinese(word)) {
                     dict.add(word);
-                    bw.write(word + "\r\n");
-                }
+                    sb.append(word).append("\r\n");
+//                }
             }
+            bw.write(sb.toString());
             bw.flush();
             LOGGER.info("Add words " + words + "to " + path + " completed");
         } catch (IOException e) {
@@ -229,15 +225,10 @@ public class Dictionary {
             }
         }
     }
-
-    public static boolean isLoadFinish(){
-        return loadFinish;
-    }
-
-    private Set<String> filter(Set<String> cache, Set<String> words){
+    public static Set<String> filter(Integer kind, Set<String> words){
         Set<String> result = new ConcurrentSkipListSet();
         for(String word : words){
-            if(!cache.contains(word)){
+            if(!_ALL_DICT.get(kind).contains(word)){
                 result.add(word);
             }
         }

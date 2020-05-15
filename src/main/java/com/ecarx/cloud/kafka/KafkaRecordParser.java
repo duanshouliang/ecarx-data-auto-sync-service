@@ -1,35 +1,51 @@
 package com.ecarx.cloud.kafka;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ecarx.cloud.business.music.factory.EventHandlerSelector;
+import com.ecarx.cloud.business.music.factory.IndexerSelector;
+import com.ecarx.cloud.constant.AnalysisFieldEnum;
+import com.ecarx.cloud.constant.IndexEventEnum;
+import com.ecarx.cloud.dict.Dictionary;
 import com.ecarx.cloud.dict.LexicalItemUtil;
 import com.ecarx.cloud.dict.cache.CacheEntity;
 import com.ecarx.cloud.elasticsearch.index.IndexEvent;
-import com.ecarx.cloud.business.music.factory.EventHandlerSelector;
 import com.ecarx.cloud.elasticsearch.index.Indexer;
-import com.ecarx.cloud.business.music.factory.IndexerSelector;
-import com.ecarx.cloud.enumeration.AnalysisFieldEnum;
-import com.ecarx.cloud.enumeration.IndexEventEnum;
 import com.ecarx.cloud.task.IndexTask;
+import com.ecarx.cloud.util.ChineseDetectUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.elasticsearch.client.transport.TransportClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class KafkaRecordParser {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaRecordParser.class);
 
     public static CacheEntity parser(ConsumerRecord<String, String> record, TransportClient client) {
         String rowContent = record.value();
         if (StringUtils.isBlank(rowContent)) {
             return null;
         }
-        KafkaMessageEntity messageEntity = JSONObject.parseObject(rowContent, KafkaMessageEntity.class);
+        KafkaMessageEntity messageEntity = null;
+        try {
+            messageEntity = JSONObject.parseObject(rowContent, KafkaMessageEntity.class);
+        } catch (Exception e) {
+            LOGGER.error("parser kafka message with exception {}", e.getMessage());
+        }
 
+        if(null == messageEntity){
+            return null;
+        }
         String eventType = messageEntity.getEventType();
         String business = messageEntity.getSchemaName() + "." + messageEntity.getTableName();
         Integer kind = AnalysisFieldEnum.getKind(business);
         if (null == kind) {
-            return null;
+            kind = 0;
         }
         CacheEntity cacheEntity = new CacheEntity();
         cacheEntity.setKind(kind);
@@ -85,11 +101,15 @@ public class KafkaRecordParser {
                 cpWords.put(kind, words);
             }
         }
-
         for (Map.Entry<Integer, Set<String>> entry : cpWords.entrySet()) {
-            List<String> tmp = new ArrayList<>(entry.getValue());
-            lexicalItems.add(tmp.get(0));
-            tmp = null;
+            Set<String> words = Dictionary.filter(entry.getKey(), entry.getValue());
+            entry.setValue(words);
+            for(String word : words){
+                if(ChineseDetectUtil.isFullChinese(word)){
+                    lexicalItems.add(word);
+                    break;
+                }
+            }
         }
     }
 }

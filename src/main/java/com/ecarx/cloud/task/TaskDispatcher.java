@@ -19,38 +19,35 @@ public class TaskDispatcher {
     private DictUpdatingMonitor dictUpdatingMonitor;
     private DictUpdatedMonitor dictUpdatedMonitor;
 
-    public TaskDispatcher(){
+    public TaskDispatcher() {
         worker = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!Thread.interrupted()){
-                    if(dictCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingDict()){
+                while (!Thread.interrupted()) {
+                    if ((dictCache.getLeftCapacity() < 1 || dictUpdatingMonitor.isUpdatingDict()) && !dictUpdatedMonitor.isChecking()) {
                         List<CacheEntity> cacheEntityList = dictCache.pull();
-                        if(null == cacheEntityList || cacheEntityList.size() == 0){
+                        if (null == cacheEntityList || cacheEntityList.size() == 0) {
                             dictUpdatingMonitor.reset();
                             continue;
                         }
+
                         //不同数据源对应的词项
                         Map<Integer, Set<String>> cpWords = new HashMap<>();
                         //每个数据中获取一个词项，用于判断词库是否更新完成
                         Set<String> lexicalItems = new HashSet<>();
                         //数据同步任务
-                        List<IndexTask>  indexTasks = new ArrayList<>();
+                        List<IndexTask> indexTasks = new ArrayList<>();
                         KafkaRecordParser.taskDispatch(cacheEntityList, cpWords, lexicalItems, indexTasks);
 
                         dictUpdatedMonitor.setTasks(indexTasks);
                         Dictionary.getInstance().addWordTasks(cpWords);
+                        dictUpdatedMonitor.setChecking(true);
                         dictUpdatedMonitor.setLexicalItems(lexicalItems);
                     }
-                    if(dictUpdatedMonitor.isDictUpdated()){
+                    if (dictUpdatedMonitor.isDictUpdated()) {
                         dictUpdatingMonitor.reset();
                         dictUpdatedMonitor.reset();
                         LOGGER.info("Dictionary has been updated!");
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
                 }
                 LOGGER.info("Task dispatcher Thread has stop");

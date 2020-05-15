@@ -34,6 +34,7 @@ public class DictUpdatingMonitor {
                     if(!updatingDict){
                         int current = counter.decrementAndGet();
                         if(current == 0){
+                            LOGGER.info("Begin to update dictionary ...");
                             updatingDict = true;
                         }
                     }
